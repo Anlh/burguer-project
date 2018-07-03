@@ -3,6 +3,7 @@ import React from 'react';
 import classes from './BuildControls.css';
 import BuildControl from './BuildControl/BuildControl';
 
+
 const controls = [
     {label: 'Salad', type: 'salad'},
     {label: 'Bacon', type: 'bacon'},
@@ -21,7 +22,11 @@ const buildControls = (props) => (
                 removed={() => props.ingredientRemoved(ctrl.type)}
                 disabled={props.disabled[ctrl.type]}/>
         ))}
-        <button className={classes.OrderButton}>ORDER NOW</button>
+        <button
+            onClick={props.ordered}
+            disabled={!props.purchasable}
+            className={classes.OrderButton}>ORDER NOW
+        </button>
     </div>
 );
 

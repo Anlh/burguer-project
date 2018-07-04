@@ -5,6 +5,9 @@ import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 import Modal from '../../components/UI/Modal/Modal';
 import OrderSummary from '../../components/Burger/OrderSummary/OrderSummary';
+import Spinner from '../../components/UI/Spinner/Spinner';
+import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
+import {firebaseInstance} from '../../axios-orders';
 
 const INGREDIENT_PRICES = {
     salad: 0.5,
@@ -14,21 +17,27 @@ const INGREDIENT_PRICES = {
 };
 
 class BurgerBuilder extends Component {
-    // constructor(props) {
-    //     super(props);
-    //     this.state = {...};
-    // }
-    // Modern syntax replace the constructor syntax above
     state = {
-        ingredients: {
-            salad: 0,
-            bacon: 0,
-            cheese: 0,
-            meat: 0
-        },
+        ingredients: null,
         totalPrice: 4,
-        purchasable: false
+        purchasable: false,
+        loading: false,
+        error: false
     };
+
+    componentDidMount() {
+        firebaseInstance.get('https://react-burger-project-1c588.firebaseio.com/ingredients.json')
+            .then(response => {
+                const ingredients = Object.keys(response.data).map(igKey => {
+                    return igKey;
+                });
+                console.log(ingredients);
+                this.setState({ingredients: response.data, purchasable: true});
+            })
+            .catch(error => {
+                this.setState({error: true});
+            });
+    }
 
 
     updatePurchaseState(ingredients) {
@@ -94,7 +103,30 @@ class BurgerBuilder extends Component {
     };
 
     purchaseContinueHandler = () => {
-        alert('you continue!');
+        // alert('you continue!');
+        this.setState({loading: true});
+        const order = {
+            ingredients: this.state.ingredients,
+            price: this.state.totalPrice,
+            customer: {
+                name: 'Tiago Ferreira',
+                address: {
+                    street: 'Test street 1',
+                    zipCode: '123123',
+                    country: 'Portugal'
+                },
+                email: 'asdad@asd.com',
+                deliveryMethod: 'fastest'
+            }
+        };
+
+        firebaseInstance.post('/orders', order)
+            .then(response => {
+                this.setState({loading: false, purchasing: false});
+            })
+            .catch(error => {
+                this.setState({loading: false, purchasing: false});
+            });
     };
 
 
@@ -107,26 +139,43 @@ class BurgerBuilder extends Component {
             disabledInfo[key] = disabledInfo[key] <= 0;
         }
 
+        let orderSummary = null;
+        let burger = this.state.error ? <p>Ingredients can't be loaded</p> : <Spinner/>;
+
+        if (this.state.ingredients) {
+            burger = (
+                <Aux>
+                    <Burger ingredients={this.state.ingredients}/>
+                    <BuildControls
+                        ordered={this.purchaseHandler}
+                        burguerPrice={this.state.totalPrice}
+                        ingredientAdded={this.addIngredientHandler}
+                        ingredientRemoved={this.removeIngredientHandler}
+                        disabled={disabledInfo}
+                        purchasable={this.state.purchasable}/>
+                </Aux>
+            );
+
+            orderSummary = <OrderSummary
+                totalPrice={this.state.totalPrice}
+                ingredients={this.state.ingredients}
+                purchaseCanceled={this.purchaseCancelHandler}
+                purchaseContinued={this.purchaseContinueHandler}/>;
+        }
+
+        if (this.state.loading) {
+            orderSummary = <Spinner/>;
+        }
+
         return (
             <Aux>
                 <Modal show={this.state.purchasing} modalClosed={this.purchaseCancelHandler}>
-                    <OrderSummary
-                        totalPrice={this.state.totalPrice}
-                        ingredients={this.state.ingredients}
-                        purchaseCanceled={this.purchaseCancelHandler}
-                        purchaseContinued={this.purchaseContinueHandler}/>
+                    {orderSummary}
                 </Modal>
-                <Burger ingredients={this.state.ingredients}/>
-                <BuildControls
-                    ordered={this.purchaseHandler}
-                    burguerPrice={this.state.totalPrice}
-                    ingredientAdded={this.addIngredientHandler}
-                    ingredientRemoved={this.removeIngredientHandler}
-                    disabled={disabledInfo}
-                    purchasable={this.state.purchasable}/>
+                {burger}
             </Aux>
         );
     }
 }
 
-export default BurgerBuilder;
+export default withErrorHandler(BurgerBuilder, firebaseInstance);

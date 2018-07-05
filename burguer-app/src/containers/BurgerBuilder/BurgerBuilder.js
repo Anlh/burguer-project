@@ -123,6 +123,8 @@ class BurgerBuilder extends Component {
         firebaseInstance.post('/orders', order)
             .then(response => {
                 this.setState({loading: false, purchasing: false});
+
+                this.props.history.push('/checkout/' + JSON.stringify({...order.ingredients}));
             })
             .catch(error => {
                 this.setState({loading: false, purchasing: false});

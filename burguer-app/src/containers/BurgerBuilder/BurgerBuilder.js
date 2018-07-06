@@ -103,32 +103,16 @@ class BurgerBuilder extends Component {
     };
 
     purchaseContinueHandler = () => {
-        // alert('you continue!');
-        this.setState({loading: true});
-        const order = {
-            ingredients: this.state.ingredients,
-            price: this.state.totalPrice,
-            customer: {
-                name: 'Tiago Ferreira',
-                address: {
-                    street: 'Test street 1',
-                    zipCode: '123123',
-                    country: 'Portugal'
-                },
-                email: 'asdad@asd.com',
-                deliveryMethod: 'fastest'
-            }
-        };
-
-        firebaseInstance.post('/orders', order)
-            .then(response => {
-                this.setState({loading: false, purchasing: false});
-
-                this.props.history.push('/checkout/' + JSON.stringify({...order.ingredients}));
-            })
-            .catch(error => {
-                this.setState({loading: false, purchasing: false});
-            });
+        const queryParams = [];
+        for (let ingredient in this.state.ingredients) {
+            queryParams.push(encodeURIComponent(ingredient) + '=' + encodeURIComponent(this.state.ingredients[ingredient]));
+        }
+        queryParams.push('price=' + this.state.totalPrice);
+        const queryString = queryParams.join('&');
+        this.props.history.push({
+            pathname: '/checkout',
+            search: '?' + queryString
+        });
     };
 
 

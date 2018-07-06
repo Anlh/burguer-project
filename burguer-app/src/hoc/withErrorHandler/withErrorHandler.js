@@ -12,7 +12,7 @@ const withErrorHandler = (WrappedComponent, axios) => {
         };
 
         componentWillMount() {
-            this.reqInterceptor = axios.interceptors.response.use(req => {
+            this.reqInterceptor = axios.interceptors.request.use(req => {
                 this.setState({error: null});
                 return req;
             });
@@ -23,9 +23,8 @@ const withErrorHandler = (WrappedComponent, axios) => {
 
         // To avoid leaks in memory we need to remove the interceptors from memory
         componentWillUnmount() {
-            console.log('Will Unmount', this.reqInterceptor, this.resInterceptor);
             axios.interceptors.request.eject(this.reqInterceptor);
-            axios.interceptors.request.eject(this.resInterceptor);
+            axios.interceptors.response.eject(this.resInterceptor);
         }
 
         errorConfirmedHandler = () => {

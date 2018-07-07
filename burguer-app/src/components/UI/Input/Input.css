@@ -28,3 +28,8 @@
     border: 1px solid red;
     background-color: #fab6ae;
 }
+
+.ValidationError {
+    color: red;
+    margin: 5px 0;
+}

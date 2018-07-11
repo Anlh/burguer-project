@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import { connect } from 'react-redux';
 
 import Button from '../../../components/UI/Button/Button';
 import Spinner from '../../../components/UI/Spinner/Spinner';
@@ -80,12 +81,11 @@ class ContactData extends Component {
                     ]
                 },
                 value: 'fastest',
-                validation: {
-                    required: true
-                },
+                validation: {},
                 valid: true
             }
         },
+        formIsValid: false,
         loading: false
     };
 
@@ -101,7 +101,7 @@ class ContactData extends Component {
         }
 
         const order = {
-            ingredients: this.props.ingredients,
+            ingredients: this.props.ings,
             price: this.props.totalPrice,
             orderData: formData
         };
@@ -155,7 +155,7 @@ class ContactData extends Component {
 
         // and pass the new object created to the new created updatedOrderForm
         updatedOrderForm[inputIdentifier] = updatedFormElement;
-        console.log(updatedFormElement);
+
         // After that we take the new updated version and extend the old state with the new values
         this.setState({orderForm: updatedOrderForm});
     };
@@ -195,4 +195,11 @@ class ContactData extends Component {
     }
 }
 
-export default ContactData;
+const mapStateToProps = state => {
+    return {
+        ings: state.ingredients,
+        totalPrice: state.totalPrice
+    };
+};
+
+export default connect(mapStateToProps)(ContactData);
